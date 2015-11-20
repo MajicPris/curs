@@ -7,10 +7,10 @@
 #include <glm\ext.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 
 #include "loadshaders.h"
-#include "car.h"
+#include "vehicle.h"
+#include "column.h"
 
 using namespace std;
-
 
 GLuint program;
 GLuint VertextBuffer;
@@ -119,8 +119,17 @@ void display(void)
 }
 
 vehicle car1(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 1500.0, 0, 0);
+vehicle car2(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 2500.0, 1, 1);
+vehicle car3(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 2500.0, 2, 2);
 
 int main(int argc, char** argv) {
+	column c;
+	c.push(car1);
+	c.push(car2);
+	c.push(car3);
+
+	c.printStack();
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA);
 	glutInitWindowSize(512, 512);
@@ -133,7 +142,7 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 	init();
-	glClearColor(1.0, 1.0,1.0, 1.0);
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glutDisplayFunc(display);
 	glutMainLoop();
 }
