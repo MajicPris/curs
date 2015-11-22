@@ -1,3 +1,10 @@
+#ifdef WIN32
+#include <windows.h>
+#define CLEAR_SCREEN "cls"
+#else
+#define CLEAR_SCREEN "clear"
+#endif
+
 #include <GL\glew.h>
 #include <GL\freeglut.h>
 
@@ -82,7 +89,7 @@ void init(void)
 
 	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
-	//glm::mat4 Scal = glm::scale(glm::vec3(3.0, 3.0, 1.0));
+	glm::mat4 Scal = glm::scale(glm::vec3(3.0, 3.0, 1.0));
 
 	glm::mat4 View = glm::lookAt(
 		glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
@@ -92,8 +99,7 @@ void init(void)
 
 	glm::mat4 Model = glm::mat4(1.0f);
 
-	MVP = Projection * View * Model;
-
+	MVP = Scal * Projection * View * Model;
 }
 
 void display(void)
@@ -115,7 +121,109 @@ void display(void)
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
-	glFlush();
+
+	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10, 'A');
+
+	glutSwapBuffers();
+}
+
+int frame = 0, t = 0, timebase = 0;
+float fps;
+
+void fpscalculate()
+{
+	frame++;
+	t = glutGet(GLUT_ELAPSED_TIME);
+
+	if (t - timebase > 1000) {
+		fps = (frame*1000.0 / (t - timebase));
+		timebase = t;
+		frame = 0;
+	}
+
+	cout << "FPS: " << fps << endl;
+}
+
+
+float numticks = 0;
+
+const int TICKS_PER_SECOND = 25;
+const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
+const int MAX_FRAMESKIP = 5;
+
+unsigned long next_game_tick = glutGet(GLUT_ELAPSED_TIME);
+unsigned long elapsed_time = 0;
+
+int loops;
+float interpolation;
+
+void game()
+{
+		numticks++;
+
+	if (numticks > 10)
+		numticks = 0;
+
+	GLfloat colors[36] = {
+		numticks / 10, numticks / 10, 1.0f,
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.f, 0.0f,
+		0.559f, 0.436f, numticks / 10,
+		0.359f, numticks / 10, 0.152f,
+		numticks / 10, 0.596f, 0.789f,
+		0.559f, 0.861f, 0.639f,
+		numticks / 10, numticks / 10, 0.859f,
+		0.14f, 0.184f, numticks / 10,
+		0.771f, numticks / 10, 0.970f,
+		numticks / 10, 0.615f, 0.116f,
+		0.676f, 0.977f, numticks / 10
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, ColorBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
+
+	GLfloat vertex[] = {
+		-numticks / 10, -0.85, 0.0, // Triangle 1
+		-0.10, 0.0, numticks / 10,
+		-0.85, numticks / 10, 0.0,
+		-numticks / 10, 0.85, 0.0, // Triangle 2
+		0.0, numticks / 10, 0.0,
+		0.85, numticks / 10, 0.0,
+		0.85, numticks / 10, 0.0, // Triangle 3
+		numticks / 10, 0.0, 0.0,
+		0.85, -0.85, 0.0,
+		0.85, -0.85, 0.0, // Triangle 4
+		0.0, -0.10, 0.0,
+		-0.85, -0.85, numticks / 10
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, VertextBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_DYNAMIC_DRAW);
+
+}
+
+void update_game(int = 1)
+{
+	if (glutGet(GLUT_ELAPSED_TIME) > next_game_tick && loops < MAX_FRAMESKIP) {		
+		game();
+		next_game_tick += SKIP_TICKS;
+		loops++;
+		glutTimerFunc(SKIP_TICKS, update_game, 1);
+	}
+}
+
+
+void timer(int = 0)
+{
+	loops = 0;
+
+	interpolation = float(glutGet(GLUT_ELAPSED_TIME) + SKIP_TICKS - next_game_tick) / float(SKIP_TICKS);
+
+	fpscalculate();
+
+	display();
+
+	glutTimerFunc(1, timer, 0);
 }
 
 vehicle car1(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 1500.0, 0, 0);
@@ -131,7 +239,7 @@ int main(int argc, char** argv) {
 	c.printStack();
 
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(512, 512);
 	glutInitContextVersion(4, 3);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
@@ -144,5 +252,7 @@ int main(int argc, char** argv) {
 	init();
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glutDisplayFunc(display);
+	update_game();
+	timer();
 	glutMainLoop();
 }
