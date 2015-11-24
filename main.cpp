@@ -1,10 +1,3 @@
-#ifdef WIN32
-#include <windows.h>
-#define CLEAR_SCREEN "cls"
-#else
-#define CLEAR_SCREEN "clear"
-#endif
-
 #include <GL\glew.h>
 #include <GL\freeglut.h>
 
@@ -28,6 +21,8 @@ GLuint shaderprogram;
 GLuint MatrixID;
 glm::mat4 MVP;
 
+column c;
+
 void init(void)
 {
 
@@ -35,33 +30,33 @@ void init(void)
 	glBindVertexArray(VA);
 
 	GLfloat vertex[] = {
-		-0.85, -0.85, 0.0, // Triangle 1
-		-0.10, 0.0, 0.0,
-		-0.85, 0.85, 0.0,
-		-0.85, 0.85, 0.0, // Triangle 2
-		0.0, 0.10, 0.0,
-		0.85, 0.85, 0.0,
-		0.85, 0.85, 0.0, // Triangle 3
+		-0.10, 0.20, 0.0, // Triangle 1
+		0.10, 0.20, 0.0,
+		-0.10, -0.20, 0.0,
+		-0.10, -0.20, 0.0, // Triangle 2
+		0.10, 0.2, 0.0,
+		0.10, -0.20, 0.0,
+		0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0
+		/*0.85, 0.85, 0.0, // Triangle 3
 		0.10, 0.0, 0.0,
 		0.85, -0.85, 0.0,
 		0.85, -0.85, 0.0, // Triangle 4
 		0.0, -0.10, 0.0,
-		-0.85, -0.85, 0.0
+		-0.85, -0.85, 0.0*/
 	};
 
-	GLfloat colors[36] = {
-		0.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.f, 0.0f,
-		0.559f, 0.436f, 0.730f,
-		0.359f, 0.583f, 0.152f,
-		0.483f, 0.596f, 0.789f,
-		0.559f, 0.861f, 0.639f,
-		0.195f, 0.548f, 0.859f,
-		0.14f, 0.184f, 0.576f,
-		0.771f, 0.328f, 0.970f,
-		0.406f, 0.615f, 0.116f,
-		0.676f, 0.977f, 0.133f
+	GLfloat colors[] = {
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		1.00f, 0.0f, 0.0f,
+		1.00f, 0.0f, 0.0f
+
+	
 	};
 
 	glGenBuffers(1, &VertextBuffer);
@@ -89,10 +84,10 @@ void init(void)
 
 	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
-	glm::mat4 Scal = glm::scale(glm::vec3(3.0, 3.0, 1.0));
+	glm::mat4 Scal = glm::scale(glm::vec3(1.0, 1.0, 1.0));
 
 	glm::mat4 View = glm::lookAt(
-		glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+		glm::vec3(0, 0, 3), // Camera is at (4,3,3), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
@@ -117,7 +112,8 @@ void display(void)
 	glBindBuffer(GL_ARRAY_BUFFER, ColorBuffer);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_LINE_STRIP, 6, 2);
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
@@ -147,7 +143,7 @@ void fpscalculate()
 
 float numticks = 0;
 
-const int TICKS_PER_SECOND = 25;
+const int TICKS_PER_SECOND = 60;
 const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 const int MAX_FRAMESKIP = 5;
 
@@ -159,52 +155,12 @@ float interpolation;
 
 void game()
 {
-		numticks++;
-
-	if (numticks > 10)
-		numticks = 0;
-
-	GLfloat colors[36] = {
-		numticks / 10, numticks / 10, 1.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.f, 0.0f,
-		0.559f, 0.436f, numticks / 10,
-		0.359f, numticks / 10, 0.152f,
-		numticks / 10, 0.596f, 0.789f,
-		0.559f, 0.861f, 0.639f,
-		numticks / 10, numticks / 10, 0.859f,
-		0.14f, 0.184f, numticks / 10,
-		0.771f, numticks / 10, 0.970f,
-		numticks / 10, 0.615f, 0.116f,
-		0.676f, 0.977f, numticks / 10
-	};
-
-	glBindBuffer(GL_ARRAY_BUFFER, ColorBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
-
-	GLfloat vertex[] = {
-		-numticks / 10, -0.85, 0.0, // Triangle 1
-		-0.10, 0.0, numticks / 10,
-		-0.85, numticks / 10, 0.0,
-		-numticks / 10, 0.85, 0.0, // Triangle 2
-		0.0, numticks / 10, 0.0,
-		0.85, numticks / 10, 0.0,
-		0.85, numticks / 10, 0.0, // Triangle 3
-		numticks / 10, 0.0, 0.0,
-		0.85, -0.85, 0.0,
-		0.85, -0.85, 0.0, // Triangle 4
-		0.0, -0.10, 0.0,
-		-0.85, -0.85, numticks / 10
-	};
-
-	glBindBuffer(GL_ARRAY_BUFFER, VertextBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_DYNAMIC_DRAW);
-
+		
 }
 
 void update_game(int = 1)
 {
-	if (glutGet(GLUT_ELAPSED_TIME) > next_game_tick && loops < MAX_FRAMESKIP) {		
+	if (glutGet(GLUT_ELAPSED_TIME) > next_game_tick && loops < MAX_FRAMESKIP) {
 		game();
 		next_game_tick += SKIP_TICKS;
 		loops++;
@@ -212,26 +168,55 @@ void update_game(int = 1)
 	}
 }
 
+void move()
+{
+	for (int i = 0; i < c.getTop(); i++)
+	{
+		c.Peek(i).x = c.Peek(i).x + c.Peek(i).speed.x;
+		c.Peek(i).y = c.Peek(i).y + c.Peek(i).speed.y;
+	}
+}
 
 void timer(int = 0)
 {
-	loops = 0;
+	//loops = 0;
 
-	interpolation = float(glutGet(GLUT_ELAPSED_TIME) + SKIP_TICKS - next_game_tick) / float(SKIP_TICKS);
+	//interpolation = float(glutGet(GLUT_ELAPSED_TIME) + SKIP_TICKS - next_game_tick) / float(SKIP_TICKS);
+	//game();
+
+	move();
+
+	const float w2 = c.Peek(0).width / 2;
+	const float h2 = c.Peek(0).height / 2;
+	const float x = c.Peek(0).x;
+	const float y = c.Peek(0).y;
+
+	GLfloat vertex[] = {
+		(x - w2) / 10 , (y+h2)/10, 0.0, // Triangle 1
+		(x + w2) / 10, (y + h2) / 10, 0.0,
+		(x - w2) / 10, (y - h2) / 10, 0.0,
+		(x - w2) / 10, (y - h2) / 10, 0.0, // Triangle 2
+		(x + w2) / 10, (y + h2) / 10, 0.0,
+		(x + w2) / 10, (y - h2) / 10, 0.0,
+		x / 10, y / 10, 0.0,
+		(x / 10) + (c.Peek(0).speed.x) * 10, (y / 10) + (c.Peek(0).speed.y) * 10, 0.0
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, VertextBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_DYNAMIC_DRAW);
 
 	fpscalculate();
 
 	display();
 
-	glutTimerFunc(1, timer, 0);
+	glutTimerFunc(SKIP_TICKS, timer, 0);
 }
 
-vehicle car1(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 1500.0, 0, 0);
+vehicle car1(2.0, 3.0, glm::vec3(0.1, 0.05, 0.0), 4.0, 0.0, 2.0, 6.0, 1500.0, 0, 0);
 vehicle car2(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 2500.0, 1, 1);
 vehicle car3(2.0, 3.0, glm::vec3(3.0, 2.0, 0.0), 4.0, 0.0, 2.0, 6.0, 2500.0, 2, 2);
 
 int main(int argc, char** argv) {
-	column c;
 	c.push(car1);
 	c.push(car2);
 	c.push(car3);
@@ -252,7 +237,7 @@ int main(int argc, char** argv) {
 	init();
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glutDisplayFunc(display);
-	update_game();
+	//update_game();
 	timer();
 	glutMainLoop();
 }
