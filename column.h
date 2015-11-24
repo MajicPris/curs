@@ -17,7 +17,7 @@ public:
 	inline void push(const vehicle&);     // поместить элемент в вершину стека
 	inline vehicle pop();                   // удалить элемент из вершины стека и вернуть его
 	inline void printStack();         // вывод стека на экран
-	inline const vehicle &Peek(int) const; // n-й элемент от вершины стека
+	inline vehicle &Peek(int) ; // n-й элемент от вершины стека
 	inline int getStackSize() const;  // получить размер стека
 	inline vehicle *getPtr() const;         // получить указатель на стек
 	inline int getTop() const;        // получить номер текущего элемента в стеке
@@ -63,11 +63,11 @@ inline vehicle column::pop()
 		stackPtr[--top]; // удаляем элемент из стека
 }
 
-// функция возвращает n-й элемент от вершины стека
-inline const vehicle& column::Peek(int nom) const
+// функция возвращает n-й элемент
+inline vehicle& column::Peek(int nom) 
 {
 	if(nom <= top)
-		return stackPtr[top - nom]; // вернуть n-й элемент стека
+		return stackPtr[ nom]; // вернуть n-й элемент стека
 }
 
 // вывод стека на экран
