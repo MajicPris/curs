@@ -22,8 +22,6 @@ public:
 	inline vehicle *getPtr() const;         // получить указатель на стек
 	inline int getTop() const;        // получить номер текущего элемента в стеке
 
-	inline void checkSpeed();
-	inline float checkDis(int, int);
 };
 
 // реализация методов шаблона класса STack
@@ -96,43 +94,4 @@ inline vehicle* column::getPtr() const
 inline int column::getTop() const
 {
 	return top;
-}
-
-inline float column::checkDis(int c2, int c1 = 0)
-{
-	if (c2 <= getTop())
-	{
-		vehicle const &car1 = Peek(c1);
-		vehicle const &car2 = Peek(c2);
-
-		return sqrt(pow((car1.x - car2.x), 2) + pow((car1.y - car2.y), 2));
-	}
-	return 0.0;
-}
-
-inline void column::checkSpeed()
-{
-	float dv = 1.4; // v = 0.05
-	for (int i = 1; i < 3; i++)
-	{
-		vehicle car1 = Peek(i - 1);
-		vehicle &car2 = Peek(i);
-		if (checkDis(i, i - 1) > (car1.height / 2 + car2.height / 2 + 4))
-		{
-			car2.destination *= car2.acceleration;
-			/*
-			if (car1.destination.x - dv > car2.destination.x)
-			car2.destination.x += dv;
-			if (car1.destination.x + dv < car2.destination.x)
-			car2.destination.x -= dv;
-			if (car1.destination.y - dv > car2.destination.y)
-			car2.destination.y += dv;
-			if (car1.destination.y + dv < car2.destination.y)
-			car2.destination.y -= dv;
-			*/
-		}
-		if (checkDis(i, i - 1) < (car1.height / 2 + car2.height / 2 + 7))
-			car2.destination *= car2.deceleration;
-	}
-
 }
