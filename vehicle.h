@@ -42,6 +42,12 @@ public:
 	bool rotated;
 	bool busy;
 	void rotate_the_car();
+
+	float old_x, old_y;
+	float distance;
+	bool path_traversed;
+	void move_forward();
+	float getDistance();
 };
 
 glm::vec3 normolize(glm::vec3);
@@ -181,14 +187,16 @@ void vehicle::rotate_the_car(){
 	{
 		float x1, y1;
 		float angle = angle_of_wheel;
-		float a = (abs(this->angle_of_rotate) - abs(this->common_angle));
+		float a = (abs((abs(this->angle_of_rotate) - abs(this->common_angle))));
 		if (a < abs(this->angle_of_wheel))
 		{
 			if (angle_of_wheel < 0)
 				angle = -a;
 			else
-				angle = -a;
+				angle = a;
 			this->rotated = true;
+			this->path_traversed = true;
+			this->distance = -1;
 		}
 		this->common_angle += angle;
 		x1 = (this->direction.x) * cos(angle) - (this->direction.y) * sin(angle);
@@ -203,11 +211,74 @@ void vehicle::rotate_the_car(){
 			yCoord[j] = y1;
 		}
 	}
- else
- {
-	 this->common_angle = 0;
-	 this->rotated = true;
- }
+	else
+	{
+		this->common_angle = 0;
+		this->rotated = true;
+		this->path_traversed = true;
+		this->distance = -1;
+	}
 
 
+}
+
+float vehicle::getDistance()
+{
+	float a = sqrt((y - old_y) * (y - old_y) + (x - old_x) * (x - old_x));
+	return a;
+}
+
+void vehicle::move_forward()
+{
+	float d;
+	d = getDistance();
+	// if (distance > (d = getDistance()))
+	if (!path_traversed)
+	{
+		d = distance - d;
+		if (d <= direction.x * speed)
+		{
+			x += d;
+			y += d;
+
+			for (int j = 0; j < 4; j++)
+			{
+				xCoord[j] += d;
+				yCoord[j] += d;
+			}
+		}
+		else
+		{
+			x += direction.x * speed;
+			y += direction.y * speed;
+
+			for (int j = 0; j < 4; j++)
+			{
+				xCoord[j] += direction.x * speed;
+				yCoord[j] += direction.y * speed;
+			}
+		}
+
+		if (getDistance() >= distance)
+		{
+			cout << "getDistance = " << getDistance() << " distance = " << distance << endl;
+			distance = -1;
+			path_traversed = true;
+			return;
+		}
+
+	}
+
+	if (distance == -1)
+	{
+
+		x += direction.x * speed;
+		y += direction.y * speed;
+
+		for (int j = 0; j < 4; j++)
+		{
+			xCoord[j] += direction.x * speed;
+			yCoord[j] += direction.y * speed;
+		}
+	}
 }
