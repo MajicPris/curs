@@ -33,15 +33,18 @@ GLuint shaderprogram;
 GLuint MatrixID;
 glm::mat4 MVP;
 
-const int num_intersetions = 6;
-intersection intersections[num_intersetions] = { { 0.0f, -130.0f, 20.0f, { { glm::vec2(0.0, 1.0), true }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, -1.0), false }, { glm::vec2(0.0, 0.0), false } }, { 1, -1, -1, -1 } }, //id 0
-{ 0.0f, 40.0f, 20.0f, { { glm::vec2(0.0, 0.0), false }, { glm::vec2(1.0, 0.0), true }, { glm::vec2(0.0, -1.0), false }, { glm::vec2(0.0, 0.0), false } }, { -1, 2, 0, -1 } }, //id 1
+const int num_intersetions = 7;
+intersection intersections[num_intersetions] = { { 0.0f, -230.0f, 20.0f, { { glm::vec2(0.0, 1.0), true }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, -1.0), false }, { glm::vec2(0.0, 0.0), false } }, { 1, -1, -1, -1 } }, //id 0
+{ 0.0f, 40.0f, 20.0f, { { glm::vec2(0.0, 0.0), false }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, -1.0), false }, { glm::vec2(-1.0, 0.0), true } }, { -1, 2, 0, 6 } }, //id 1
 { 70.0f, 40.0f, 20.0f, { { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, -1.0), true }, { glm::vec2(-1.0, 0.0), false } }, { -1, -1, 3, 1 } }, //id 2
-{ 70.0f, -40.0f, 20.0f, { { glm::vec2(0.0, 1.0), false }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(-1.0, 0.0), true } }, { 2, 4, -1, 5 } }, //id 3
-{ 100.0f, -40.0f, 20.0f, { { glm::vec2(0.0, 0.0), false }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(-1.0, 0.0), true } }, { -1, -1, -1, 3 } }, //id 4
-{ 30.0f, -40.0f, 20.0f, { { glm::vec2(0.0, 1.0), true }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, 0.0), false} }, { -1, 3, -1, -1 } } }; //id 5
+{ 70.0f, -40.0f, 20.0f, { { glm::vec2(0.0, 1.0), false }, { glm::vec2(1.0, 0.0), true }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(-1.0, 0.0), false } }, { 2, 4, -1, 5 } }, //id 3
+{ 140.0f, -40.0f, 20.0f, { { glm::vec2(0.0, 0.0), false }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(-1.0, 0.0), true } }, { -1, -1, -1, 3 } }, //id 4
+{ 30.0f, -40.0f, 20.0f, { { glm::vec2(0.0, 1.0), true }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, 0.0), false } }, { -1, 3, -1, -1 } }, //id 5
+{ -90.0f, 40.0f, 20.0f, { { glm::vec2(0.0, 1.0), true }, { glm::vec2(1.0, 0.0), false }, { glm::vec2(0.0, 0.0), false }, { glm::vec2(0.0, 0.0), false } }, { -1, 1, -1, -1 } } }; //id 6
 
-const int max_veh = 10;
+
+
+const int max_veh = 1;
 column c(max_veh);
 
 void init(void)
@@ -149,11 +152,38 @@ int vehicle_in_inters(vehicle &car)
 			if (!car.busy)
 			{
 				car.busy = true;
+				if (!car.path_traversed)
+					return 0;
 				for (int j = 0; j < 4; j++)
 				{
 					if (intersections[i].directions[j].main)
 					{
-						car.angle_of_wheel = - 0.04;
+						float angle = car.getAngle(intersections[i].directions[j].dir);
+						if (angle > 0)
+						{
+							car.angle_of_wheel = -0.04;
+
+							car.old_x = car.x;
+							car.old_y = car.y;
+						}
+						if (angle < 0)
+						{
+							car.angle_of_wheel = 0.04;
+							car.old_x = car.x;
+							car.old_y = car.y;
+							car.distance = 10;
+
+							if (car.path_traversed)
+							{
+								cout << "zzz";
+								car.path_traversed = false;
+							}
+						}
+						if (angle == 0)
+						{
+							car.angle_of_wheel = 0;
+							car.distance = -1;
+						}
 						car.angle_of_rotate = M_PI / 2;
 					}
 				}
@@ -162,41 +192,23 @@ int vehicle_in_inters(vehicle &car)
 			}
 		}
 		else
-		{
-			//car.rotated = true;
 			car.busy = false;
-		}
 	}
 	return -1;
 }
-
-bool ta = true;
 
 void move()
 {
 	for (int i = 0; i < c.getTop(); i++)
 	{
+
+		c.Peek(i).move_forward();
 		vehicle_in_inters(c.Peek(i));
 
-		//if (c.Peek(i).rotated == false && c.Peek(i).busy == true)
-		//	c.Peek(i).rotate_the_car();
-		//c.Peek(i).direction = normolize({ c.Peek(i).direction.x, c.Peek(i).direction.y, 0.0 });
-
-		if (!c.Peek(i).rotated)
+		if (!c.Peek(i).rotated && c.Peek(i).path_traversed)
 		{
 			c.Peek(i).rotate_the_car();
 		}
-
-		c.Peek(i).x += c.Peek(i).direction.x * c.Peek(i).speed;
-		c.Peek(i).y += c.Peek(i).direction.y * c.Peek(i).speed;
-
-		for (int j = 0; j < 4; j++)
-		{
-			c.Peek(i).xCoord[j] += c.Peek(i).direction.x * c.Peek(i).speed;
-			c.Peek(i).yCoord[j] += c.Peek(i).direction.y * c.Peek(i).speed;
-		}
-		//float angle = c.Peek(i).getAngle();
-		//c.Peek(i).rotate(angle);
 
 	}
 }
@@ -206,7 +218,7 @@ void updategame()
 	// ИСПРАВАИТЬ
 	int const numVertex = 8 * 3;
 	//GLfloat vertex[max_veh * numVertex + (num_intersetions - 1) * 2 * 3 * 2];
-	GLfloat vertex[max_veh * numVertex + 200]; //186 for 5
+	GLfloat vertex[max_veh * numVertex + 250]; //186 for 5
 
 	move();
 
@@ -432,8 +444,8 @@ void MouseFunc(int button, int state, int x, int y)
 {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		cout << c.Peek(0).busy << endl;
-		cout << x << " " << y << endl;
+		cout << c.Peek(0).getDistance() << endl;
+		cout << c.Peek(0).distance << endl;
 	}
 }
 
@@ -442,9 +454,11 @@ int main(int argc, char** argv) {
 	vehicle car;
 	for (int i = 0; i < max_veh; i++)
 	{
-		car.x = (i - max_veh / 2) * 0 + 5;
-		car.y = -100 - (i - max_veh / 2) * 15;
-		car.speed = +0.20;
+		car.x = car.old_x = (i - max_veh / 2) * 0 + 5;
+		car.y = car.old_y = -0 - (i - max_veh / 2) * 15;
+		car.speed = 0.20;
+		car.distance = -1;
+		car.path_traversed = true;
 
 		car.direction = normolize({ 0.0, 1.0, 0.0 });
 		car.acceleration = 0.01;
